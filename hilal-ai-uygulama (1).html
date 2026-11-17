@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hilal AI</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#E30A17">
+<style>
+:root{--red:#E30A17;--surface:rgba(255,255,255,.95);--text:#1a1a1a;--muted:#6b6b6b;--ai:#f1f1f1;--border:rgba(0,0,0,.1);--input:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--surface:rgba(24,24,26,.95);--text:#f2f2f2;--muted:#a3a3a3;--ai:#2b2b2e;--border:rgba(255,255,255,.12);--input:#1a1a1c}}
+:root[data-theme="dark"]{--surface:rgba(24,24,26,.95);--text:#f2f2f2;--muted:#a3a3a3;--ai:#2b2b2e;--border:rgba(255,255,255,.12);--input:#1a1a1c}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--red);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text)}
+#flag{position:fixed;inset:0;width:100%;height:100%}
+.app{position:relative;height:100%;max-width:720px;margin:0 auto;padding:10px}
+.card{position:relative;height:100%;display:flex;flex-direction:column;background:var(--surface);border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,.3);overflow:hidden}
+header{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border)}
+header .t{flex:1;min-width:0}
+header h1{font-size:17px;margin:0}
+header p{font-size:12px;margin:0;color:var(--muted)}
+.ib{background:none;border:0;font-size:20px;color:var(--text);padding:6px 8px;cursor:pointer;border-radius:10px}
+#msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:88%;padding:10px 13px;border-radius:16px;line-height:1.45;font-size:15px;white-space:pre-wrap;word-wrap:break-word}
+.m.ai{background:var(--ai);align-self:flex-start;border-bottom-left-radius:4px}
+.m.user{background:var(--red);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.acts{display:flex;gap:12px;margin-top:8px}
+.acts button{background:none;border:0;color:var(--muted);font-size:12px;cursor:pointer;padding:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 8px}
+.chip{border:1px solid var(--red);color:var(--red);background:transparent;border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer}
+#files{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px}
+.bar{display:flex;gap:6px;padding:10px;border-top:1px solid var(--border);align-items:flex-end}
+textarea,select{font:inherit;font-size:15px;color:var(--text);background:var(--input);border:1px solid var(--border);border-radius:14px;padding:10px 12px}
+#q{flex:1;resize:none;max-height:120px}
+.send{background:var(--red);color:#fff;border:0;border-radius:14px;padding:11px 16px;font-size:15px;font-weight:600;cursor:pointer}
+button:disabled{opacity:.5}
+.note{font-size:11px;color:var(--muted);text-align:center;padding:0 12px 8px}
+.ov{position:absolute;inset:0;background:var(--surface);z-index:5;display:none;flex-direction:column;padding:14px;gap:10px;overflow-y:auto}
+.ov.on{display:flex}
+.ov h2{margin:0;font-size:17px;display:flex;justify-content:space-between;align-items:center}
+.row{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;cursor:pointer}
+.row span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row.cur{border-color:var(--red)}
+label{font-size:13px;color:var(--muted)}
+.btn{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:12px;padding:10px;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<svg id="flag" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<rect width="300" height="200" fill="#E30A17"/>
+<g transform="translate(36,0)"><circle cx="100" cy="100" r="50" fill="#fff"/><circle cx="112.5" cy="100" r="40" fill="#E30A17"/>
+<polygon fill="#fff" points="178,100 164.47,104.7 164.18,119.02 155.53,107.61 141.82,111.76 150,100 141.82,88.24 155.53,92.39 164.18,80.98 164.47,95.3"/></g>
+</svg>
+
+<div class="app"><div class="card">
+<header>
+<button class="ib" id="menu" title="Sohbetler">☰</button>
+<div class="t"><h1>Hilal AI</h1><p>Doğrudan, esprili, dürüst</p></div>
+<button class="ib" id="theme" title="Tema">◐</button>
+<button class="ib" id="set" title="Ayarlar">⚙</button>
+</header>
+<div id="msgs"></div>
+<div class="chips" id="chips"></div>
+<div id="files"></div>
+<div class="bar">
+<button class="ib" id="att" title="Dosya ekle">📎</button>
+<textarea id="q" rows="1" placeholder="Bir şey sor…"></textarea>
+<button class="send" id="go">Gönder</button>
+</div>
+<div class="note">Güncel konularda yanılabilir, önemli bilgileri kontrol et.</div>
+
+<div class="ov" id="hist">
+<h2>Sohbetler <button class="ib" id="hx">✕</button></h2>
+<button class="btn" id="newc">+ Yeni sohbet</button>
+<div id="list" style="display:flex;flex-direction:column;gap:8px"></div>
+</div>
+
+<div class="ov" id="sett">
+<h2>Ayarlar <button class="ib" id="sx">✕</button></h2>
+<label>Konuşma tarzı</label>
+<select id="tone">
+<option value="kara">Tokat şivesi, esprili, yerinde küfürlü</option>
+<option value="karak">Tokat şivesi, esprili, küfürsüz</option>
+<option value="duz">Düz Türkçe, hafif esprili</option>
+</select>
+<label>Kendi talimatların (her sohbette geçerli)</label>
+<textarea id="instr" rows="6" placeholder="Örn: Hep kısa cevap ver. Bana “kardeşim” de."></textarea>
+<label>API anahtarı: Groq (console.groq.com, gsk_ ile başlar) ya da Gemini (aistudio.google.com)</label>
+<div id="keyhint" style="display:none;color:var(--red);font-size:13px">Önce API anahtarını gir.</div>
+<input id="key" type="password" placeholder="gsk_… ya da AIza…" style="font:inherit;font-size:15px;color:var(--text);background:var(--input);border:1px solid var(--border);border-radius:14px;padding:10px 12px">
+<label>Model (boş bırak: Groq için openai/gpt-oss-120b, Gemini için gemini-2.5-flash)</label>
+<input id="model" placeholder="gemini-2.5-flash" style="font:inherit;font-size:15px;color:var(--text);background:var(--input);border:1px solid var(--border);border-radius:14px;padding:10px 12px">
+<button class="btn" id="clr">Tüm sohbet geçmişini sil</button>
+</div>
+</div></div>
+<input type="file" id="fi" multiple accept="text/*,.md,.csv,.json,.txt,image/*" hidden>
+
+<script>
+const $=id=>document.getElementById(id);
+let S={chats:[],cur:null,settings:{instr:'',tone:'kara',theme:'auto',key:'',model:''}};
+try{const r=localStorage.getItem('hilal:v1');if(r){const p=JSON.parse(r);S={...S,...p,settings:{...S.settings,...(p.settings||{})}}}}catch(e){}
+const save=()=>{try{localStorage.setItem('hilal:v1',JSON.stringify(S))}catch(e){}};
+const TONES={
+kara:`Hafif Tokat şivesiyle konuş: "ula", "hele bi", "bööle", "şööle", "gızım", "oğlum", "hemşerim", "emme" (ama), "-yom/-yon" ekleri (gidiyom, ne diyon) gibi ifadeleri azıcık, abartmadan serpiştir; yazı okunaklı kalsın. Yerinde ve dozunda hafif küfür ve argo kullanabilirsin (bir aksiliğe, saçmalığa, esprili bağlama). Kullanıcıya doğrudan hakaret etme; ırkçılık, nefret söylemi ve cinsel içerik yok. Ölüm, hastalık, afet gibi hassas ve acı konularda küfürü ve şakayı bırak.`,
+karak:`Hafif Tokat şivesiyle konuş: "ula", "hele bi", "bööle", "şööle", "gızım", "oğlum", "hemşerim", "emme" (ama), "-yom/-yon" ekleri gibi ifadeleri azıcık serpiştir. Küfür etme, ama espri ve nüktede bol ol. Hassas konularda şakayı bırak.`,
+duz:`Düz ve akıcı Türkçe konuş, hafif espri yapabilirsin. Küfür etme.`};
+function system(){return `Sen "Hilal AI"sin, Türkçe konuşan bir yapay zeka asistanısın. Kişiliğin Grok gibi: esprili, cesur, doğrudan, samimi. Türk kültürünü, tarihini, coğrafyasını ve deyimlerini iyi bilirsin.
+${TONES[S.settings.tone]||TONES.kara}
+DOĞRULUK EN ÖNCELİKLİ KURALINDIR:
+- Emin olmadığın şeyi uydurma; "emin değilim" de.
+- Tarih, sayı, isim ve istatistikte dikkatli ol; kesin değilsen "yaklaşık" de.
+- Güncel olaylarda, fiyatlarda ve görevdeki kişilerde internet aramasını kullan; arama sonuçlarıyla çelişirsen aramaya güven. Kaynak linklerini sistem ekler, sen link yazma.
+- Önce doğrudan cevap, sonra gerekirse kısa açıklama. Gereksiz uzatma.
+- Cevabın sonunda "Kaynak:" satırında dayandığın güvenilir kaynakların adını an (örn. TÜİK, Wikipedia’daki madde adı, ilgili bakanlık). Asla link uydurma; kaynağı bilmiyorsan "Kaynak: genel bilgi, doğrulanmadı" yaz.
+- Sağlık, hukuk, finansta genel bilgi ver, uzmana danışmayı hatırlat.
+- Kullanıcı dosya eklerse içeriğine dayanarak cevap ver.
+Cevapları telefonda rahat okunacak kadar kısa tut.
+${S.settings.instr?'KULLANICININ KENDİ TALİMATLARI (uygula):\n'+S.settings.instr:''}`}
+
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmt=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">$1</a>');
+const chat=()=>S.chats.find(c=>c.id===S.cur);
+function applyTheme(){const t=S.settings.theme;if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t)}
+function newChat(){const c={id:Date.now(),title:'Yeni sohbet',msgs:[]};S.chats.unshift(c);S.cur=c.id;save();render()}
+function bubble(m){
+ const d=document.createElement('div');d.className='m '+(m.role==='user'?'user':'ai');
+ if(m.role==='user')d.textContent=m.show||m.content;else{
+  const t=document.createElement('div');t.innerHTML=fmt(m.content);d.appendChild(t);d._t=t;
+  const a=document.createElement('div');a.className='acts';
+  const cp=document.createElement('button');cp.textContent='Kopyala';cp.onclick=()=>copy(m.content,cp);
+  const sh=document.createElement('button');sh.textContent='Paylaş';sh.onclick=()=>share(m.content,sh);
+  a.append(cp,sh);d.appendChild(a);}
+ $('msgs').appendChild(d);$('msgs').scrollTop=1e9;return d}
+async function copy(t,b){let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{const x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();ok=document.execCommand('copy');x.remove()}catch(e2){}}
+ const o=b.textContent;b.textContent=ok?'Kopyalandı ✓':'Kopyalanamadı';setTimeout(()=>b.textContent=o,1500)}
+async function share(t,b){try{if(navigator.share){await navigator.share({text:t+'\n\n— Hilal AI'});return}}catch(e){if(e&&e.name==='AbortError')return}copy(t,b)}
+function render(){
+ $('msgs').innerHTML='';const c=chat();
+ const w=document.createElement('div');w.className='m ai';w.textContent='Selam, ben Hilal AI! Ne merak ediyorsan sor, dosya da atabilirsin. Bilmediğimi bilmiyormuş gibi yapmam, ona göre.';$('msgs').appendChild(w);
+ c.msgs.forEach(bubble);
+ $('chips').style.display=c.msgs.length?'none':'flex';
+}
+function renderList(){
+ const l=$('list');l.innerHTML='';
+ S.chats.forEach(c=>{const r=document.createElement('div');r.className='row'+(c.id===S.cur?' cur':'');
+  const s=document.createElement('span');s.textContent=c.title;
+  const x=document.createElement('button');x.className='ib';x.textContent='🗑';
+  x.onclick=e=>{e.stopPropagation();S.chats=S.chats.filter(z=>z.id!==c.id);if(!S.chats.length)newChat();else{if(S.cur===c.id)S.cur=S.chats[0].id;save();render()}renderList()};
+  r.onclick=()=>{S.cur=c.id;save();render();$('hist').classList.remove('on')};
+  r.append(s,x);l.appendChild(r)})}
+
+['Türkiye’nin en uzun nehri hangisi?','Osmanlı neden yıkıldı?','Tokat kebabı nasıl yapılır?'].forEach(t=>{
+ const b=document.createElement('button');b.className='chip';b.textContent=t;b.onclick=()=>{$('q').value=t;send()};$('chips').appendChild(b)});
+
+let pending=[],busy=false;
+$('att').onclick=()=>$('fi').click();
+$('fi').onchange=e=>{pending.push(...e.target.files);e.target.value='';showFiles()};
+function showFiles(){const f=$('files');f.innerHTML='';pending.forEach((p,i)=>{const b=document.createElement('button');b.className='chip';b.textContent='📎 '+p.name+' ✕';b.onclick=()=>{pending.splice(i,1);showFiles()};f.appendChild(b)})}
+
+const b64=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result.split(',')[1]);x.readAsDataURL(f)});
+async function send(){
+ const text=$('q').value.trim();if((!text&&!pending.length)||busy)return;
+ if(!S.settings.key){$('set').click();$('keyhint').style.display='block';return}
+ busy=true;$('go').disabled=true;
+ const files=pending;pending=[];showFiles();$('q').value='';
+ let content=text||'Bu dosyaya bak.',show=text,imgs=[];
+ for(const f of files){
+  if(f.type.startsWith('image/')){imgs.push({inline_data:{mime_type:f.type,data:await b64(f)}});content+=`\n[Eklenen görsel: ${f.name}]`}
+  else{try{let t=await f.text();if(t.length>40000)t=t.slice(0,40000)+'\n[… dosya kısaltıldı]';content+=`\n\n[Dosya: ${f.name}]\n${t}`}catch(e){content+=`\n[Dosya okunamadı: ${f.name}]`}}
+  show=(show?show+'\n':'')+'📎 '+f.name}
+ const c=chat();const um={role:'user',content,show:show||content};
+ c.msgs.push(um);if(c.title==='Yeni sohbet'){c.title=(text||files[0].name).slice(0,32)}
+ $('chips').style.display='none';bubble(um);save();
+ const b=bubble({role:'assistant',content:'Arıyorum ve düşünüyorum…'});
+ try{
+  const contents=c.msgs.slice(-11).map(m=>({role:m.role==='user'?'user':'model',parts:[{text:m.content}]}));
+  if(imgs.length)contents[contents.length-1].parts.push(...imgs);
+  if(S.settings.key.startsWith('gsk_')){
+  let wiki=[],ctx='';
+  try{if(text){const w=await fetch('https://tr.wikipedia.org/w/api.php?action=query&generator=search&gsrlimit=3&prop=extracts&exintro=1&explaintext=1&exchars=1200&format=json&origin=*&gsrsearch='+encodeURIComponent(text)).then(x=>x.json());
+   wiki=Object.values((w.query&&w.query.pages)||{});ctx=wiki.map(p=>`[${p.title}]\n${p.extract}`).join('\n\n')}}catch(e){}
+  const sys=system()+'\nNOT: Bu modda canlı internet aramanın yok. Sadece aşağıdaki Vikipedi bulguları ve kendi bilginle cevap ver; güncel konularda bilgin eski olabilir, bunu açıkça söyle.'+(ctx?'\n\nVİKİPEDİ BULGULARI (uygunsa kullan, alakasızsa yok say):\n'+ctx:'');
+  const msgs=[{role:'system',content:sys},...c.msgs.slice(-11).map(m=>({role:m.role,content:m.content}))];
+  const r2=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+S.settings.key},body:JSON.stringify({model:S.settings.model||'openai/gpt-oss-120b',messages:msgs})});
+  const j2=await r2.json();if(!r2.ok)throw {code:r2.status};
+  let t2=((j2.choices&&j2.choices[0]&&j2.choices[0].message&&j2.choices[0].message.content)||'').trim()||'Cevap alamadım, tekrar dene.';
+  if(wiki.length)t2+='\n\nVikipedi’de bulunan ilgili maddeler:\n'+wiki.map(p=>`• [${p.title.replace(/[\[\]]/g,'')}](https://tr.wikipedia.org/?curid=${p.pageid})`).join('\n');
+  b._t.innerHTML=fmt(t2);c.msgs.push({role:'assistant',content:t2});save();busy=false;$('go').disabled=false;return
+ }
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${S.settings.model||'gemini-2.5-flash'}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.settings.key},body:JSON.stringify({system_instruction:{parts:[{text:system()}]},contents,tools:[{google_search:{}}]})});
+  const j=await r.json();
+  if(!r.ok)throw {code:r.status};
+  const cand=j.candidates&&j.candidates[0];
+  let t=((cand&&cand.content&&cand.content.parts)||[]).map(p=>p.text||'').join('').trim()||'Cevap alamadım, tekrar dene.';
+  const ch=((cand&&cand.groundingMetadata&&cand.groundingMetadata.groundingChunks)||[]).filter(x=>x.web);
+  if(ch.length)t+='\n\nKaynaklar:\n'+ch.slice(0,5).map(x=>`• [${(x.web.title||'kaynak').replace(/[\[\]]/g,'')}](${x.web.uri})`).join('\n');
+  b._t.innerHTML=fmt(t);c.msgs.push({role:'assistant',content:t});save();
+ }catch(e){c.msgs.pop();const k=e&&e.code;b._t.textContent=k===429?'Ücretsiz günlük limit dolmuş olabilir. Biraz bekle ya da yarın dene.':(k===400||k===401||k===403)?'API anahtarı geçersiz görünüyor. Ayarlardan kontrol et.':'Bağlanamadım, internetini ve anahtarı kontrol edip tekrar dene.'}
+ busy=false;$('go').disabled=false;$('q').focus();
+}
+$('go').onclick=send;
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&innerWidth>700){e.preventDefault();send()}});
+$('menu').onclick=()=>{renderList();$('hist').classList.add('on')};
+$('hx').onclick=()=>$('hist').classList.remove('on');
+$('newc').onclick=()=>{newChat();$('hist').classList.remove('on')};
+$('theme').onclick=()=>{const dark=document.documentElement.getAttribute('data-theme')==='dark'||(S.settings.theme==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);S.settings.theme=dark?'light':'dark';applyTheme();save()};
+$('set').onclick=()=>{$('tone').value=S.settings.tone;$('instr').value=S.settings.instr;$('key').value=S.settings.key||'';$('model').value=S.settings.model||'';$('sett').classList.add('on')};
+$('sx').onclick=()=>{S.settings.tone=$('tone').value;S.settings.instr=$('instr').value.trim();S.settings.key=$('key').value.trim();S.settings.model=$('model').value.trim();$('keyhint').style.display='none';save();$('sett').classList.remove('on')};
+$('clr').onclick=()=>{if(confirm('Tüm sohbetler silinsin mi?')){S.chats=[];newChat();$('sett').classList.remove('on')}};
+applyTheme();if(!chat()){S.chats.length?S.cur=S.chats[0].id:newChat()}render();
+</script>
+</body>
+</html>
